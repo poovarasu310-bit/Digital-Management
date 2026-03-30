@@ -59,6 +59,7 @@ export default function TaskList({ tasks, onUpdateTask, onDeleteTask }) {
                 onChange={e => setEditForm({...editForm, status: e.target.value})}
               >
                 <option value="pending">Pending</option>
+                <option value="in-progress">In Progress</option>
                 <option value="completed">Completed</option>
               </select>
               <div className="flex gap-2 justify-end">
@@ -74,9 +75,11 @@ export default function TaskList({ tasks, onUpdateTask, onDeleteTask }) {
                     {task.title}
                   </h3>
                   <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium border ${
-                    task.status === 'completed' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-amber-50 text-amber-700 border-amber-200'
+                    task.status === 'completed' ? 'bg-green-50 text-green-700 border-green-200' : 
+                    task.status === 'in-progress' ? 'bg-blue-50 text-blue-700 border-blue-200' : 
+                    'bg-yellow-50 text-yellow-700 border-yellow-200'
                   }`}>
-                    {task.status.charAt(0).toUpperCase() + task.status.slice(1)}
+                    {task.status === 'in-progress' ? 'In Progress' : task.status.charAt(0).toUpperCase() + task.status.slice(1)}
                   </span>
                 </div>
                 {task.description && (

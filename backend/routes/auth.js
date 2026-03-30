@@ -1,6 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const supabase = require('../config/database');
+const { authenticate, checkRole } = require('../middleware/authMiddleware');
+
+let localUsers = [];
 
 // Register test route for browser testing
 router.get('/register', (req, res) => {
@@ -21,13 +24,18 @@ router.post('/register', async (req, res) => {
     password,
     options: {
       data: {
-        full_name: displayName
+        full_name: displayName,
+        role: 'user'
       }
     }
   });
 
   if (error) {
     return res.status(400).json({ error: error.message });
+  }
+
+  if (data.user) {
+    localUsers.push({ id: data.user.id, email: data.user.email, role: 'user', name: displayName });
   }
 
   res.status(201).json({ 
@@ -54,6 +62,15 @@ router.post('/login', async (req, res) => {
     return res.status(401).json({ error: error.message });
   }
 
+  if (data.user && !localUsers.find(u => u.id === data.user.id)) {
+    localUsers.push({ 
+      id: data.user.id, 
+      email: data.user.email, 
+      role: data.user.user_metadata?.role || 'user',
+      name: data.user.user_metadata?.full_name || ''
+    });
+  }
+
   res.status(200).json({ 
     message: 'Login successful', 
     user: data.user, 
@@ -62,19 +79,13 @@ router.post('/login', async (req, res) => {
 });
 
 // Get User
-router.get('/user', async (req, res) => {
-  const authHeader = req.headers.authorization;
-  if (!authHeader) return res.status(401).json({ error: 'No token provided' });
-  
-  const token = authHeader.split(' ')[1];
-  
-  const { data: { user }, error } = await supabase.auth.getUser(token);
-  
-  if (error || !user) {
-    return res.status(401).json({ error: 'Invalid token or user not found' });
-  }
-  
-  res.status(200).json({ user });
+router.get('/user', authenticate, (req, res) => {
+  res.status(200).json({ user: req.user });
+});
+
+// Admin: Get all users
+router.get('/users', authenticate, checkRole('admin'), (req, res) => {
+  res.status(200).json(localUsers);
 });
 
 module.exports = router;

@@ -55,6 +55,7 @@ export default function TaskForm({ onTaskAdded }) {
             className="w-full px-4 py-2 border border-border rounded-md focus:ring-primary focus:border-primary outline-none bg-white"
           >
             <option value="pending">Pending</option>
+            <option value="in-progress">In Progress</option>
             <option value="completed">Completed</option>
           </select>
         </div>

@@ -46,57 +46,65 @@ export default function Login() {
   };
 
   return (
-    <div className="flex-1 flex flex-col items-center justify-center bg-gray-50 p-4 relative">
-      <div className="absolute top-0 left-0 w-full h-[250px] bg-primary opacity-5 rounded-b-[40px] blur-[20px]"></div>
-      
+    <div className="min-h-screen flex items-center justify-center bg-gray-950 px-4">
       <div 
-        className={`w-full bg-background rounded-[28px] shadow-airbnb p-6 sm:p-8 z-10 transition-all duration-700 ease-in-out transform flex flex-col ${
+        className={`w-full max-w-[420px] bg-gray-900 rounded-2xl p-8 shadow-xl transition-all duration-700 ease-in-out transform flex flex-col ${
           mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'
         }`}
       >
         <div className="mb-8 text-center pt-2">
-          <div className="mx-auto w-12 h-12 bg-primary/10 text-primary rounded-2xl flex items-center justify-center mb-5">
+          <div className="mx-auto w-12 h-12 bg-pink-500/10 text-pink-500 rounded-full flex items-center justify-center mb-5">
             <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
               <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z" />
             </svg>
           </div>
-          <h2 className="text-[28px] font-bold text-foreground tracking-tight leading-tight">Welcome Back</h2>
-          <p className="mt-2 text-[15px] font-medium text-muted">Log in to your account</p>
+          <h2 className="text-2xl font-bold text-white tracking-tight leading-tight">Welcome Back</h2>
+          <p className="mt-2 text-sm text-gray-400">Log in to your account</p>
         </div>
         
         {error && (
-          <div className="mb-6 p-4 rounded-xl bg-red-50 border border-red-100 text-primary text-center text-sm font-medium" role="alert">
+          <div className="mb-6 p-4 rounded-lg bg-red-500/10 border border-red-500/50 text-red-500 text-center text-sm font-medium" role="alert">
             {error}
           </div>
         )}
         
         <form onSubmit={handleLogin} className="space-y-4">
-          <Input 
-            id="email"
-            label="Email" 
-            type="email" 
-            required 
-            value={email} 
-            onChange={(e) => setEmail(e.target.value)} 
-          />
-          <Input 
-            id="password"
-            label="Password" 
-            type="password" 
-            required 
-            value={password} 
-            onChange={(e) => setPassword(e.target.value)} 
-          />
+          <div>
+            <input 
+              id="email"
+              type="email" 
+              placeholder="Email"
+              required 
+              value={email} 
+              onChange={(e) => setEmail(e.target.value)} 
+              className="w-full p-3 rounded-lg bg-gray-800 border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:border-pink-500 focus:ring-1 focus:ring-pink-500 transition-colors"
+            />
+          </div>
+          <div>
+            <input 
+              id="password"
+              type="password" 
+              placeholder="Password"
+              required 
+              value={password} 
+              onChange={(e) => setPassword(e.target.value)} 
+              className="w-full p-3 rounded-lg bg-gray-800 border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:border-pink-500 focus:ring-1 focus:ring-pink-500 transition-colors"
+            />
+          </div>
           <div className="pt-4">
-            <Button type="submit" fullWidth disabled={loading}>
+            <button 
+              type="submit" 
+              disabled={loading}
+              className="w-full bg-pink-500 hover:bg-pink-600 text-white py-3 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
               {loading ? 'Authenticating...' : 'Login'}
-            </Button>
+            </button>
           </div>
         </form>
         
-        <div className="mt-8 text-center text-[15px] font-medium text-muted pb-2">
+        <div className="mt-8 text-center text-sm font-medium text-gray-400 pb-2">
           Don't have an account?{' '}
-          <Link href="/register" className="text-primary hover:text-primary-hover hover:underline transition-colors px-1 rounded-md">
+          <Link href="/register" className="text-pink-500 hover:text-pink-400 hover:underline transition-colors px-1 py-1 rounded-md">
             Create account
           </Link>
         </div>
