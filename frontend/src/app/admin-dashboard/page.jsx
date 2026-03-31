@@ -188,7 +188,7 @@ export default function AdminDashboard() {
                           <button 
                             onClick={() => handleDeleteUser(u.id)}
                             className="text-red-500 hover:text-red-700 text-sm font-medium"
-                            disabled={u.email === 'admin@digitaltalent.com'}
+                            disabled={u.id === user.id}
                           >
                             Delete
                           </button>

@@ -5,6 +5,14 @@ const authenticate = async (req, res, next) => {
   if (!authHeader) return res.status(401).json({ error: 'No token provided' });
   
   const token = authHeader.split(' ')[1];
+  
+  // Developer token bypass
+  if (token === 'dev-admin-token-12345') {
+    // For simplicity we use the newer email but since token is generic it works as admin.
+    req.user = { id: 'dev-admin-id-123', email: 'poovarasuvelu310@gmail.com', role: 'admin' };
+    return next();
+  }
+
   const { data: { user }, error } = await supabase.auth.getUser(token);
   
   if (error || !user) {

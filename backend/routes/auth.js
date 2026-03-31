@@ -12,8 +12,9 @@ router.get('/register', (req, res) => {
 
 // Register
 router.post('/register', async (req, res) => {
-  const { email, password, fullName, name } = req.body;
+  const { email, password, fullName, name, role } = req.body;
   const displayName = fullName || name;
+  const userRole = role === 'admin' ? 'admin' : 'user';
   
   if (!email || !password || !displayName) {
     return res.status(400).json({ error: 'Please provide email, password, and name.' });
@@ -25,7 +26,7 @@ router.post('/register', async (req, res) => {
     options: {
       data: {
         full_name: displayName,
-        role: email === 'admin@digitaltalent.com' ? 'admin' : 'user'
+        role: userRole
       }
     }
   });
@@ -35,8 +36,7 @@ router.post('/register', async (req, res) => {
   }
 
   if (data.user) {
-    const roleAssigned = email === 'admin@digitaltalent.com' ? 'admin' : 'user';
-    localUsers.push({ id: data.user.id, email: data.user.email, role: roleAssigned, name: displayName });
+    localUsers.push({ id: data.user.id, email: data.user.email, role: userRole, name: displayName });
   }
 
   res.status(201).json({ 
@@ -56,6 +56,26 @@ router.post('/login', async (req, res) => {
   
   if (!email || !password) {
     return res.status(400).json({ error: 'Please provide email and password.' });
+  }
+
+  // Developer Bypass for testing specific admin email
+  if (email === 'poovarasuvelu310@gmail.com' || email === 'poovarasu310@gmail.com') {
+    const devUser = {
+      id: 'dev-admin-id-123',
+      email: email,
+      role: 'admin',
+      name: 'Admin Poovarasu'
+    };
+    
+    if (!localUsers.find(u => u.id === devUser.id)) {
+      localUsers.push(devUser);
+    }
+    
+    return res.status(200).json({ 
+      message: 'Login successful', 
+      user: devUser, 
+      token: 'dev-admin-token-12345' 
+    });
   }
 
   const { data, error } = await supabase.auth.signInWithPassword({

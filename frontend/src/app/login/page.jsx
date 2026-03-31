@@ -8,6 +8,7 @@ import Button from '@/components/ui/Button';
 export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [activeTab, setActiveTab] = useState('user');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [mounted, setMounted] = useState(false);
@@ -32,11 +33,19 @@ export default function Login() {
       
       if (!res.ok) throw new Error(data.error || 'Login failed');
       
+      // Role Validation
+      if (activeTab === 'admin' && data.user.role !== 'admin') {
+        throw new Error('Access denied. Not an admin account.');
+      }
+      if (activeTab === 'user' && data.user.role !== 'user') {
+        throw new Error('Access denied. Not a standard user account.');
+      }
+      
       localStorage.setItem('token', data.token);
       localStorage.setItem('user', JSON.stringify(data.user)); // Optional but good for UI
       
-      if (data.user.role === 'admin') {
-        router.push('/admin');
+      if (activeTab === 'admin') {
+        router.push('/admin-dashboard');
       } else {
         router.push('/dashboard');
       }
@@ -66,6 +75,23 @@ export default function Login() {
           </div>
           <h2 className="text-2xl font-bold text-white tracking-tight leading-tight">Welcome Back</h2>
           <p className="mt-2 text-sm text-gray-400">Log in to your account</p>
+        </div>
+        
+        <div className="flex w-full mb-6 bg-gray-800 rounded-lg p-1">
+          <button 
+            type="button"
+            className={`flex-1 py-2 text-sm font-medium rounded-md transition-colors ${activeTab === 'user' ? 'bg-gray-700 text-white shadow' : 'text-gray-400 hover:text-white'}`}
+            onClick={() => { setActiveTab('user'); setError(''); }}
+          >
+            User Login
+          </button>
+          <button 
+            type="button"
+            className={`flex-1 py-2 text-sm font-medium rounded-md transition-colors ${activeTab === 'admin' ? 'bg-gray-700 text-white shadow' : 'text-gray-400 hover:text-white'}`}
+            onClick={() => { setActiveTab('admin'); setError(''); }}
+          >
+            Admin Login
+          </button>
         </div>
         
         {error && (
