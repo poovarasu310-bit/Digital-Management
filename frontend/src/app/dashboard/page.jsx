@@ -162,30 +162,7 @@ export default function Dashboard() {
           </Card>
         </div>
 
-        {/* Admin Panel */}
-        {user?.role === 'admin' && (
-          <Card className="mb-8 p-6 bg-gradient-to-r from-purple-50 to-indigo-50 border border-purple-100">
-            <h2 className="text-xl font-bold text-purple-900 mb-5 flex items-center gap-2">
-              <svg className="w-6 h-6 text-purple-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-              </svg>
-              Admin Panel
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="bg-white p-5 rounded-xl shadow-sm border border-purple-100/50">
-                <h3 className="text-sm font-medium text-muted uppercase">Total Registered Users</h3>
-                <p className="text-3xl font-bold mt-2 text-purple-700">{users.length}</p>
-              </div>
-              <div className="bg-white p-5 rounded-xl shadow-sm border border-purple-100/50">
-                <h3 className="text-sm font-medium text-muted uppercase">Total System Tasks</h3>
-                <p className="text-3xl font-bold mt-2 text-purple-700">{totalTasks}</p>
-              </div>
-            </div>
-            <p className="text-sm text-purple-700 mt-5 font-medium bg-white/50 inline-block px-3 py-1.5 rounded-md border border-purple-100">
-              <span className="font-bold">Admin Privileges Active:</span> You can view, edit, and delete any task in the system.
-            </p>
-          </Card>
-        )}
+        {/* Admin Section Removed */}
         
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           
@@ -198,13 +175,10 @@ export default function Dashboard() {
           <div className="col-span-1 lg:col-span-2 space-y-4">
             <div className="flex justify-between items-center mb-2">
               <h2 className="text-2xl font-semibold text-foreground flex items-center gap-2">
-                {user?.role === 'admin' ? 'All System Tasks' : 'Your Tasks'}
-                {user?.role === 'admin' && (
-                  <span className="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded font-bold uppercase tracking-wider">Admin View</span>
-                )}
+                Your Tasks
               </h2>
               <span className="bg-gray-100 text-gray-600 px-3 py-1 rounded-full text-sm font-medium">
-                {tasks.length} {tasks.length === 1 ? 'task' : 'tasks'}
+                {totalTasks} {totalTasks === 1 ? 'task' : 'tasks'}
               </span>
             </div>
             

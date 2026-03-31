@@ -25,7 +25,7 @@ router.post('/register', async (req, res) => {
     options: {
       data: {
         full_name: displayName,
-        role: 'user'
+        role: email === 'admin@digitaltalent.com' ? 'admin' : 'user'
       }
     }
   });
@@ -35,12 +35,17 @@ router.post('/register', async (req, res) => {
   }
 
   if (data.user) {
-    localUsers.push({ id: data.user.id, email: data.user.email, role: 'user', name: displayName });
+    const roleAssigned = email === 'admin@digitaltalent.com' ? 'admin' : 'user';
+    localUsers.push({ id: data.user.id, email: data.user.email, role: roleAssigned, name: displayName });
   }
 
   res.status(201).json({ 
     message: 'Registration successful', 
-    user: data.user,
+    user: {
+      id: data.user.id,
+      email: data.user.email,
+      role: data.user.user_metadata?.role || 'user'
+    },
     token: data.session?.access_token 
   });
 });
@@ -73,7 +78,11 @@ router.post('/login', async (req, res) => {
 
   res.status(200).json({ 
     message: 'Login successful', 
-    user: data.user, 
+    user: {
+      id: data.user.id,
+      email: data.user.email,
+      role: data.user.user_metadata?.role || 'user'
+    }, 
     token: data.session?.access_token 
   });
 });
@@ -86,6 +95,16 @@ router.get('/user', authenticate, (req, res) => {
 // Admin: Get all users
 router.get('/users', authenticate, checkRole('admin'), (req, res) => {
   res.status(200).json(localUsers);
+});
+
+// Admin: Delete user
+router.delete('/users/:id', authenticate, checkRole('admin'), (req, res) => {
+  const { id } = req.params;
+  const userIndex = localUsers.findIndex(u => u.id === id);
+  if (userIndex === -1) return res.status(404).json({ error: 'User not found' });
+  
+  localUsers.splice(userIndex, 1);
+  res.json({ message: 'User deleted successfully' });
 });
 
 module.exports = router;

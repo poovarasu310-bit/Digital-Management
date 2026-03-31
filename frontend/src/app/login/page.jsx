@@ -33,7 +33,13 @@ export default function Login() {
       if (!res.ok) throw new Error(data.error || 'Login failed');
       
       localStorage.setItem('token', data.token);
-      router.push('/dashboard');
+      localStorage.setItem('user', JSON.stringify(data.user)); // Optional but good for UI
+      
+      if (data.user.role === 'admin') {
+        router.push('/admin');
+      } else {
+        router.push('/dashboard');
+      }
     } catch (err) {
       if (err.message === 'Failed to fetch') {
         setError('Cannot connect to server. Please ensure the backend is running on port 5000.');
