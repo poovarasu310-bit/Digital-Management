@@ -8,7 +8,7 @@ import Button from '@/components/ui/Button';
 export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [activeTab, setActiveTab] = useState('user');
+  const [selectedRole, setSelectedRole] = useState('user');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [mounted, setMounted] = useState(false);
@@ -27,24 +27,16 @@ export default function Login() {
       const res = await fetch('http://localhost:5000/api/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password })
+        body: JSON.stringify({ email, password, role: selectedRole })
       });
       const data = await res.json();
       
       if (!res.ok) throw new Error(data.error || 'Login failed');
       
-      // Role Validation
-      if (activeTab === 'admin' && data.user.role !== 'admin') {
-        throw new Error('Access denied. Not an admin account.');
-      }
-      if (activeTab === 'user' && data.user.role !== 'user') {
-        throw new Error('Access denied. Not a standard user account.');
-      }
-      
       localStorage.setItem('token', data.token);
       localStorage.setItem('user', JSON.stringify(data.user)); // Optional but good for UI
       
-      if (activeTab === 'admin') {
+      if (data.user.role === 'admin') {
         router.push('/admin-dashboard');
       } else {
         router.push('/dashboard');
@@ -77,23 +69,7 @@ export default function Login() {
           <p className="mt-2 text-sm text-gray-400">Log in to your account</p>
         </div>
         
-        <div className="flex w-full mb-6 bg-gray-800 rounded-lg p-1">
-          <button 
-            type="button"
-            className={`flex-1 py-2 text-sm font-medium rounded-md transition-colors ${activeTab === 'user' ? 'bg-gray-700 text-white shadow' : 'text-gray-400 hover:text-white'}`}
-            onClick={() => { setActiveTab('user'); setError(''); }}
-          >
-            User Login
-          </button>
-          <button 
-            type="button"
-            className={`flex-1 py-2 text-sm font-medium rounded-md transition-colors ${activeTab === 'admin' ? 'bg-gray-700 text-white shadow' : 'text-gray-400 hover:text-white'}`}
-            onClick={() => { setActiveTab('admin'); setError(''); }}
-          >
-            Admin Login
-          </button>
-        </div>
-        
+
         {error && (
           <div className="mb-6 p-4 rounded-lg bg-red-500/10 border border-red-500/50 text-red-500 text-center text-sm font-medium" role="alert">
             {error}
@@ -101,6 +77,22 @@ export default function Login() {
         )}
         
         <form onSubmit={handleLogin} className="space-y-4">
+          <div className="flex rounded-lg bg-gray-800 p-1 mb-2">
+            <button
+              type="button"
+              className={`flex-1 py-2 text-sm font-medium rounded-md transition-colors ${selectedRole === 'user' ? 'bg-gray-700 text-white shadow' : 'text-gray-400 hover:text-white'}`}
+              onClick={() => setSelectedRole('user')}
+            >
+              User Login
+            </button>
+            <button
+              type="button"
+              className={`flex-1 py-2 text-sm font-medium rounded-md transition-colors ${selectedRole === 'admin' ? 'bg-gray-700 text-white shadow' : 'text-gray-400 hover:text-white'}`}
+              onClick={() => setSelectedRole('admin')}
+            >
+              Admin Login
+            </button>
+          </div>
           <div>
             <input 
               id="email"

@@ -24,6 +24,7 @@ router.post('/register', async (req, res) => {
     email,
     password,
     options: {
+      emailRedirectTo: "http://localhost:3000/login",
       data: {
         full_name: displayName,
         role: userRole
@@ -36,23 +37,32 @@ router.post('/register', async (req, res) => {
   }
 
   if (data.user) {
+    const { error: insertError } = await supabase.from("users").insert({
+      id: data.user.id,
+      email: email,
+      role: userRole
+    });
+    
+    if (insertError) {
+      console.error("Error inserting user:", insertError);
+    }
+
     localUsers.push({ id: data.user.id, email: data.user.email, role: userRole, name: displayName });
   }
 
   res.status(201).json({ 
-    message: 'Registration successful', 
+    message: 'Verification email sent. Please check your inbox and confirm your account.', 
     user: {
-      id: data.user.id,
-      email: data.user.email,
-      role: data.user.user_metadata?.role || 'user'
-    },
-    token: data.session?.access_token 
+      id: data.user?.id || 'pending',
+      email: email,
+      role: userRole
+    }
   });
 });
 
 // Login
 router.post('/login', async (req, res) => {
-  const { email, password } = req.body;
+  const { email, password, role: selectedRole } = req.body;
   
   if (!email || !password) {
     return res.status(400).json({ error: 'Please provide email and password.' });
@@ -84,14 +94,37 @@ router.post('/login', async (req, res) => {
   });
 
   if (error) {
+    if (error.message === "Email not confirmed") {
+      return res.status(401).json({ error: 'Email not verified.' });
+    }
     return res.status(401).json({ error: error.message });
+  }
+
+  let role = data.user.user_metadata?.role || 'user';
+  
+  try {
+    const { data: userData, error: userError } = await supabase
+      .from('users')
+      .select('role')
+      .eq('id', data.user.id)
+      .single();
+      
+    if (userData && userData.role) {
+      role = userData.role;
+    }
+  } catch (err) {
+    console.error("Error fetching user role:", err);
+  }
+
+  if (selectedRole === 'admin' && role !== 'admin') {
+    return res.status(403).json({ error: 'Access denied. Not an admin account.' });
   }
 
   if (data.user && !localUsers.find(u => u.id === data.user.id)) {
     localUsers.push({ 
       id: data.user.id, 
       email: data.user.email, 
-      role: data.user.user_metadata?.role || 'user',
+      role: role,
       name: data.user.user_metadata?.full_name || ''
     });
   }
@@ -101,7 +134,7 @@ router.post('/login', async (req, res) => {
     user: {
       id: data.user.id,
       email: data.user.email,
-      role: data.user.user_metadata?.role || 'user'
+      role: role
     }, 
     token: data.session?.access_token 
   });

@@ -11,6 +11,7 @@ export default function Register() {
   const [password, setPassword] = useState('');
   const [role, setRole] = useState('user');
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
   const [mounted, setMounted] = useState(false);
   const router = useRouter();
@@ -22,6 +23,7 @@ export default function Register() {
   const handleRegister = async (e) => {
     e.preventDefault();
     setError('');
+    setSuccess('');
     setLoading(true);
     
     try {
@@ -34,10 +36,16 @@ export default function Register() {
       
       if (!res.ok) throw new Error(data.error || 'Registration failed');
       
-      router.push('/login');
+      setSuccess(data.message || "Verification email sent. Please check your inbox and confirm your account.");
+      // Optional: wait a bit before redirecting or let the user click login
+      setTimeout(() => {
+        router.push('/login');
+      }, 3000);
     } catch (err) {
       if (err.message === 'Failed to fetch') {
         setError('Cannot connect to server. Please ensure the backend is running on port 5000.');
+      } else if (err.message.toLowerCase().includes('sending confirmation')) {
+        setError('Account created, but we could not send the verification email. Please try again later or contact support.');
       } else {
         setError(err.message);
       }
@@ -69,6 +77,12 @@ export default function Register() {
         {error && (
           <div className="mb-6 p-4 rounded-lg bg-red-500/10 border border-red-500/50 text-red-500 text-center text-sm font-medium" role="alert">
             {error}
+          </div>
+        )}
+        
+        {success && (
+          <div className="mb-6 p-4 rounded-lg bg-green-500/10 border border-green-500/50 text-green-500 text-center text-sm font-medium" role="alert">
+            {success}
           </div>
         )}
         
