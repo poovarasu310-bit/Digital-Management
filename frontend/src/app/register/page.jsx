@@ -2,8 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import Input from '@/components/ui/Input';
-import Button from '@/components/ui/Button';
+import { supabase } from '@/lib/supabase';
 
 export default function Register() {
   const [name, setName] = useState('');
@@ -27,28 +26,33 @@ export default function Register() {
     setLoading(true);
     
     try {
-      const res = await fetch('http://localhost:5000/api/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password, name, role })
+      // 1. Sign up user via Supabase Auth
+      const { data, error: authError } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: "http://localhost:3000/login",
+          data: {
+            full_name: name,
+            role: role // Trigger will automatically pick this up
+          }
+        }
       });
-      const data = await res.json();
+
+      if (authError) throw authError;
+
+      const user = data?.user;
+
+      // Note: A database trigger (defined in setup.sql) now handles 
+      // the insertion into the public 'users' table automatically!
       
-      if (!res.ok) throw new Error(data.error || 'Registration failed');
+      setSuccess("Check your email to confirm your account before logging in.");
       
-      setSuccess(data.message || "Verification email sent. Please check your inbox and confirm your account.");
-      // Optional: wait a bit before redirecting or let the user click login
       setTimeout(() => {
         router.push('/login');
-      }, 3000);
+      }, 4000);
     } catch (err) {
-      if (err.message === 'Failed to fetch') {
-        setError('Cannot connect to server. Please ensure the backend is running on port 5000.');
-      } else if (err.message.toLowerCase().includes('sending confirmation')) {
-        setError('Account created, but we could not send the verification email. Please try again later or contact support.');
-      } else {
-        setError(err.message);
-      }
+      setError(err.message);
     } finally {
       setLoading(false);
     }
@@ -66,7 +70,7 @@ export default function Register() {
             <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
               <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
               <circle cx="9" cy="7" r="4" />
-              <line x1="19" y1="8" x2="19" y2="14" />
+              <line x1="19" x2="19" y2="14" />
               <line x1="22" y1="11" x2="16" y2="11" />
             </svg>
           </div>
@@ -95,7 +99,7 @@ export default function Register() {
               required 
               value={name} 
               onChange={(e) => setName(e.target.value)} 
-              className="w-full p-3 rounded-lg bg-gray-800 border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:border-pink-500 focus:ring-1 focus:ring-pink-500 transition-colors"
+              className="w-full p-4 rounded-lg bg-gray-800 border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:border-pink-500 focus:ring-1 focus:ring-pink-500 transition-colors"
             />
           </div>
           <div>
@@ -106,7 +110,7 @@ export default function Register() {
               required 
               value={email} 
               onChange={(e) => setEmail(e.target.value)} 
-              className="w-full p-3 rounded-lg bg-gray-800 border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:border-pink-500 focus:ring-1 focus:ring-pink-500 transition-colors"
+              className="w-full p-4 rounded-lg bg-gray-800 border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:border-pink-500 focus:ring-1 focus:ring-pink-500 transition-colors"
             />
           </div>
           <div>
@@ -117,25 +121,30 @@ export default function Register() {
               required 
               value={password} 
               onChange={(e) => setPassword(e.target.value)} 
-              className="w-full p-3 rounded-lg bg-gray-800 border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:border-pink-500 focus:ring-1 focus:ring-pink-500 transition-colors"
+              className="w-full p-4 rounded-lg bg-gray-800 border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:border-pink-500 focus:ring-1 focus:ring-pink-500 transition-colors"
             />
           </div>
           <div>
-            <select
-              id="role"
-              value={role}
-              onChange={(e) => setRole(e.target.value)}
-              className="w-full p-3 rounded-lg bg-gray-800 border border-gray-700 text-white focus:outline-none focus:border-pink-500 focus:ring-1 focus:ring-pink-500 transition-colors appearance-none"
-            >
-              <option value="user">User</option>
-              <option value="admin">Admin</option>
-            </select>
+            <div className="relative">
+              <select
+                id="role"
+                value={role}
+                onChange={(e) => setRole(e.target.value)}
+                className="w-full p-4 rounded-lg bg-gray-800 border border-gray-700 text-white focus:outline-none focus:border-pink-500 focus:ring-1 focus:ring-pink-500 transition-colors appearance-none cursor-pointer"
+              >
+                <option value="user">User</option>
+                <option value="admin">Admin</option>
+              </select>
+              <div className="absolute inset-y-0 right-0 flex items-center px-4 pointer-events-none text-gray-400">
+                <svg className="w-4 h-4 fill-current" viewBox="0 0 20 20"><path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" /></svg>
+              </div>
+            </div>
           </div>
           <div className="pt-4">
             <button 
               type="submit" 
               disabled={loading}
-              className="w-full bg-pink-500 hover:bg-pink-600 text-white py-3 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full bg-pink-500 hover:bg-pink-600 text-white py-4 rounded-lg font-bold text-lg transition-all transform active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-pink-500/20"
             >
               {loading ? 'Registering...' : 'Register'}
             </button>
