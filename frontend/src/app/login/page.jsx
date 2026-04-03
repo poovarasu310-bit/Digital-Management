@@ -1,22 +1,31 @@
 "use client";
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 
-export default function Login() {
+function LoginContent() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
   const [resendLoading, setResendLoading] = useState(false);
   const [isUnconfirmed, setIsUnconfirmed] = useState(false);
   const [mounted, setMounted] = useState(false);
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   useEffect(() => {
     setMounted(true);
-  }, []);
+    
+    // Check if redirected after confirmation
+    // Supabase standard redirects leave fragments or codes
+    if (window.location.hash.includes('access_token') || searchParams.has('code')) {
+      setSuccess("Email successfully verified! You can now log in.");
+    }
+  }, [searchParams]);
+
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -119,6 +128,12 @@ export default function Login() {
           <p className="mt-2 text-sm text-gray-400">Log in to your account</p>
         </div>
         
+        {success && (
+          <div className="mb-6 p-4 rounded-lg bg-green-500/10 border border-green-500/50 text-green-500 text-center text-sm font-medium" role="alert">
+            {success}
+          </div>
+        )}
+        
         {error && (
           <div className="mb-6 p-4 rounded-lg bg-red-500/10 border border-red-500/50 text-red-500 text-center text-sm font-medium" role="alert">
             {error}
@@ -178,5 +193,13 @@ export default function Login() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function Login() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-gray-950 flex items-center justify-center text-white font-medium">Loading...</div>}>
+      <LoginContent />
+    </Suspense>
   );
 }

@@ -39,20 +39,27 @@ export default function Register() {
         }
       });
 
-      if (authError) throw authError;
+      if (authError) {
+        // If the error is only about sending the email, the user IS created in Supabase Auth
+        // but just needs manual verification or to check their dashboard.
+        const isEmailError = authError.message?.toLowerCase().includes('sending confirmation') || 
+                            authError.message?.toLowerCase().includes('confirmation url');
+        
+        if (isEmailError) {
+          setSuccess("Account created, but there was an issue sending the confirmation email. Please check your Supabase dashboard to verify manually or try again later.");
+          setTimeout(() => router.push('/login'), 5000);
+          return;
+        }
+        throw authError;
+      }
 
-      const user = data?.user;
-
-      // Note: A database trigger (defined in setup.sql) now handles 
-      // the insertion into the public 'users' table automatically!
-      
-      setSuccess("Check your email to confirm your account before logging in.");
+      setSuccess("Check your email (and spam) to confirm your account before logging in.");
       
       setTimeout(() => {
         router.push('/login');
       }, 4000);
     } catch (err) {
-      setError(err.message);
+      setError(err.message || "Registration failed. Please try again.");
     } finally {
       setLoading(false);
     }

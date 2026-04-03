@@ -52,7 +52,7 @@ export default function TaskForm({ onTaskAdded }) {
           <select 
             value={status}
             onChange={(e) => setStatus(e.target.value)}
-            className="w-full px-4 py-2 border border-border rounded-md focus:ring-primary focus:border-primary outline-none bg-white"
+            className="w-full px-4 py-2 border border-border rounded-md focus:ring-primary focus:border-primary outline-none bg-white text-slate-900"
           >
             <option value="pending">Pending</option>
             <option value="in-progress">In Progress</option>

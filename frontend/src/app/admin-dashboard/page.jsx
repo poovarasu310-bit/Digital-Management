@@ -232,7 +232,7 @@ export default function AdminDashboard() {
                                 onChange={(e) => setEditForm({...editForm, title: e.target.value})}
                               />
                               <select 
-                                className="border rounded px-2 py-1 text-sm"
+                                className="border rounded px-2 py-1 text-sm bg-white text-slate-900"
                                 value={editForm.status}
                                 onChange={(e) => setEditForm({...editForm, status: e.target.value})}
                               >

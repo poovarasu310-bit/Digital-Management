@@ -54,7 +54,7 @@ export default function TaskList({ tasks, onUpdateTask, onDeleteTask }) {
                 placeholder="Task description"
               />
               <select
-                className="w-full px-3 py-2 border rounded bg-white"
+                className="w-full px-3 py-2 border rounded bg-white text-slate-900"
                 value={editForm.status}
                 onChange={e => setEditForm({...editForm, status: e.target.value})}
               >

@@ -88,41 +88,13 @@ router.post('/login', async (req, res) => {
     return res.status(400).json({ error: 'Please provide email and password.' });
   }
 
-  // Developer Bypass / Local Users Check
-  const localUser = localUsers.find(u => u.email === email);
-  if (localUser && (localUser.password === password || email.includes('poovarasu'))) {
-    console.log("Using Local/Developer Bypass for:", email);
-    return res.status(200).json({ 
-      message: 'Login successful (Local Bypass)', 
-      user: {
-        id: localUser.id,
-        email: localUser.email,
-        role: localUser.role
-      }, 
-      token: 'dev-token-' + localUser.id 
-    });
-  }
-
+  // Check if credentials are valid via Supabase Auth
   const { data, error } = await supabase.auth.signInWithPassword({
     email,
     password,
   });
 
   if (error) {
-    if (error.message === "Email not confirmed") {
-      const pendingUser = localUsers.find(u => u.email === email);
-      if (pendingUser) {
-        return res.status(200).json({ 
-          message: 'Login successful (Bypassing verification)', 
-          user: {
-            id: pendingUser.id,
-            email: pendingUser.email,
-            role: pendingUser.role
-          }, 
-          token: 'dev-bypass-token-' + pendingUser.id 
-        });
-      }
-    }
     return res.status(401).json({ error: 'Invalid login credentials' });
   }
 
