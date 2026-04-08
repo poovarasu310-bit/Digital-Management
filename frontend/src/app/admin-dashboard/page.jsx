@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import axios from 'axios';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
+import { ComposedChart, Bar, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell } from 'recharts';
 
 export default function AdminDashboard() {
   const [user, setUser] = useState(null);
@@ -15,7 +16,7 @@ export default function AdminDashboard() {
   
   // Edit Task State
   const [editingTaskId, setEditingTaskId] = useState(null);
-  const [editForm, setEditForm] = useState({ title: '', status: '' });
+  const [editForm, setEditForm] = useState({ title: '', status: '', githubLink: '' });
 
   const router = useRouter();
 
@@ -93,7 +94,7 @@ export default function AdminDashboard() {
   
   const startEditTask = (t) => {
     setEditingTaskId(t.id);
-    setEditForm({ title: t.title, status: t.status });
+    setEditForm({ title: t.title, status: t.status, githubLink: t.githubLink || '' });
   };
   
   const saveTaskEdit = async (id) => {
@@ -118,6 +119,22 @@ export default function AdminDashboard() {
   const totalTasks = tasks.length;
   const completedTasks = tasks.filter(t => t.status === 'completed').length;
   const pendingTasks = tasks.filter(t => t.status === 'pending').length;
+  const inProgressTasks = tasks.filter(t => t.status === 'in-progress').length;
+
+  const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316'];
+  
+  const taskChartData = tasks.map((t, index) => {
+    let progress = 0;
+    if (t.status === 'completed') progress = 100;
+    else if (t.status === 'in-progress') progress = 50;
+    else progress = 20;
+
+    return {
+      name: t.title.length > 10 ? t.title.substring(0, 10) + '...' : t.title,
+      progress: progress,
+      color: COLORS[index % COLORS.length]
+    };
+  });
 
   return (
     <div className="min-h-screen bg-gray-50/50 pb-16">
@@ -159,130 +176,169 @@ export default function AdminDashboard() {
           </Card>
         </div>
 
-        {/* Two-Column Layout for Tables */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          
-          {/* User Management Section */}
-          <div>
-            <h2 className="text-xl font-bold text-foreground mb-4">User Management</h2>
-            <Card className="overflow-hidden shadow-sm border border-gray-200">
-              <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse">
-                  <thead>
-                    <tr className="bg-gray-100/50 border-b border-gray-200 text-sm">
-                      <th className="p-3 font-medium text-muted">User Email</th>
-                      <th className="p-3 font-medium text-muted">Role</th>
-                      <th className="p-3 font-medium text-muted text-right">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {users.map(u => (
-                      <tr key={u.id} className="border-b border-gray-100 last:border-0 hover:bg-gray-50/50 transition-colors">
-                        <td className="p-3 text-sm font-medium">{u.email}</td>
-                        <td className="p-3">
-                          <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${u.role === 'admin' ? 'bg-purple-100 text-purple-700' : 'bg-gray-100 text-gray-700'}`}>
-                            {u.role}
-                          </span>
-                        </td>
-                        <td className="p-3 text-right">
-                          <button 
-                            onClick={() => handleDeleteUser(u.id)}
-                            className="text-red-500 hover:text-red-700 text-sm font-medium"
-                            disabled={u.id === user.id}
-                          >
-                            Delete
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                    {users.length === 0 && (
-                      <tr>
-                        <td colSpan={3} className="p-4 text-center text-muted">No users found</td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
+        {/* Charts Section */}
+        {taskChartData.length > 0 && (
+          <div className="mb-10">
+            <Card className="p-6">
+              <h3 className="text-lg font-semibold text-foreground mb-4">Overall Task Progress Monitor</h3>
+              <div className="h-64">
+                <ResponsiveContainer width="100%" height="100%">
+                  <ComposedChart data={taskChartData} margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
+                    <CartesianGrid stroke="#eee" strokeDasharray="5 5"/>
+                    <XAxis dataKey="name" tick={{fontSize: 11}} />
+                    <YAxis domain={[0, 100]} tickFormatter={(t) => `${t}%`} tick={{fontSize: 11}} />
+                    <Tooltip formatter={(value) => `${value}%`} />
+                    <Bar dataKey="progress" barSize={30} name="Progress %" radius={[4, 4, 0, 0]}>
+                      {taskChartData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Bar>
+                    <Line type="monotone" dataKey="progress" stroke="#334155" strokeWidth={3} dot={{ r: 5, fill: '#334155', stroke: '#fff', strokeWidth: 2 }} activeDot={{ r: 7 }} />
+                  </ComposedChart>
+                </ResponsiveContainer>
               </div>
             </Card>
           </div>
+        )}
 
-          {/* Task Management Section */}
-          <div>
-            <h2 className="text-xl font-bold text-foreground mb-4">Admin Task Management</h2>
-            <Card className="overflow-hidden shadow-sm border border-gray-200">
-              <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse">
-                  <thead>
-                    <tr className="bg-gray-100/50 border-b border-gray-200 text-sm">
-                      <th className="p-3 font-medium text-muted">Title</th>
-                      <th className="p-3 font-medium text-muted">Status</th>
-                      <th className="p-3 font-medium text-muted">Owner</th>
-                      <th className="p-3 font-medium text-muted text-right">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {tasks.map(t => (
-                      <tr key={t.id} className="border-b border-gray-100 last:border-0 hover:bg-gray-50/50 transition-colors">
-                        {editingTaskId === t.id ? (
-                          <td colSpan={4} className="p-3">
-                            <div className="flex flex-col gap-2">
-                              <input 
-                                className="border rounded px-2 py-1 flex-1 text-sm"
-                                value={editForm.title}
-                                onChange={(e) => setEditForm({...editForm, title: e.target.value})}
-                              />
-                              <select 
-                                className="border rounded px-2 py-1 text-sm bg-white text-slate-900"
-                                value={editForm.status}
-                                onChange={(e) => setEditForm({...editForm, status: e.target.value})}
-                              >
-                                <option value="pending">Pending</option>
-                                <option value="in-progress">In-Progress</option>
-                                <option value="completed">Completed</option>
-                              </select>
-                              <div className="flex gap-2 justify-end mt-2">
-                                <Button size="sm" variant="outline" onClick={() => setEditingTaskId(null)}>Cancel</Button>
-                                <Button size="sm" onClick={() => saveTaskEdit(t.id)}>Save</Button>
-                              </div>
+        {/* Full-width layout for Task Management (primary feature) */}
+        <div className="mb-10">
+          <h2 className="text-xl font-bold text-foreground mb-4">Admin Task Management</h2>
+          <Card className="overflow-hidden shadow-sm border border-gray-200">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="bg-gray-100/50 border-b border-gray-200 text-sm">
+                    <th className="p-3 font-medium text-muted">Title</th>
+                    <th className="p-3 font-medium text-muted">Status</th>
+                    <th className="p-3 font-medium text-muted">Owner</th>
+                    <th className="p-3 font-medium text-muted">Code</th>
+                    <th className="p-3 font-medium text-muted text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {tasks.map(t => (
+                    <tr key={t.id} className="border-b border-gray-100 last:border-0 hover:bg-gray-50/50 transition-colors">
+                      {editingTaskId === t.id ? (
+                        <td colSpan={5} className="p-3">
+                          <div className="flex flex-col gap-2">
+                            <input 
+                              className="border rounded px-2 py-1 flex-1 text-sm"
+                              value={editForm.title}
+                              onChange={(e) => setEditForm({...editForm, title: e.target.value})}
+                            />
+                            <input 
+                              type="url"
+                              className="border rounded px-2 py-1 flex-1 text-sm"
+                              value={editForm.githubLink}
+                              onChange={(e) => setEditForm({...editForm, githubLink: e.target.value})}
+                              placeholder="GitHub Link"
+                            />
+                            <select 
+                              className="border rounded px-2 py-1 text-sm bg-white text-slate-900"
+                              value={editForm.status}
+                              onChange={(e) => setEditForm({...editForm, status: e.target.value})}
+                            >
+                              <option value="pending">Pending</option>
+                              <option value="in-progress">In-Progress</option>
+                              <option value="completed">Completed</option>
+                            </select>
+                            <div className="flex gap-2 justify-end mt-2">
+                              <Button size="sm" variant="outline" onClick={() => setEditingTaskId(null)}>Cancel</Button>
+                              <Button size="sm" onClick={() => saveTaskEdit(t.id)}>Save</Button>
+                            </div>
+                          </div>
+                        </td>
+                      ) : (
+                        <>
+                          <td className="p-3 text-sm font-medium">{t.title}</td>
+                          <td className="p-3">
+                            <span className={`px-2 py-0.5 rounded-full text-xs font-semibold border ${
+                              t.status === 'completed' ? 'bg-green-50 text-green-700 border-green-200' :
+                              t.status === 'in-progress' ? 'bg-blue-50 text-blue-700 border-blue-200' :
+                              'bg-yellow-50 text-yellow-700 border-yellow-200'
+                            }`}>
+                              {t.status}
+                            </span>
+                          </td>
+                          <td className="p-3 text-sm text-muted break-all max-w-[150px]">
+                            {getOwnerEmail(t.userId)}
+                          </td>
+                          <td className="p-3 text-sm text-muted">
+                            {t.githubLink ? (
+                              <a href={t.githubLink} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800 underline flex items-center gap-1">
+                                GitHub
+                              </a>
+                            ) : (
+                              <span>-</span>
+                            )}
+                          </td>
+                          <td className="p-3 text-right">
+                            <div className="flex gap-3 justify-end">
+                              <button onClick={() => startEditTask(t)} className="text-blue-500 hover:text-blue-700 text-sm font-medium">Edit</button>
+                              <button onClick={() => handleDeleteTask(t.id)} className="text-red-500 hover:text-red-700 text-sm font-medium">Delete</button>
                             </div>
                           </td>
-                        ) : (
-                          <>
-                            <td className="p-3 text-sm font-medium">{t.title}</td>
-                            <td className="p-3">
-                              <span className={`px-2 py-0.5 rounded-full text-xs font-semibold border ${
-                                t.status === 'completed' ? 'bg-green-50 text-green-700 border-green-200' :
-                                t.status === 'in-progress' ? 'bg-blue-50 text-blue-700 border-blue-200' :
-                                'bg-yellow-50 text-yellow-700 border-yellow-200'
-                              }`}>
-                                {t.status}
-                              </span>
-                            </td>
-                            <td className="p-3 text-sm text-muted break-all max-w-[150px]">
-                              {getOwnerEmail(t.userId)}
-                            </td>
-                            <td className="p-3 text-right">
-                              <div className="flex gap-3 justify-end">
-                                <button onClick={() => startEditTask(t)} className="text-blue-500 hover:text-blue-700 text-sm font-medium">Edit</button>
-                                <button onClick={() => handleDeleteTask(t.id)} className="text-red-500 hover:text-red-700 text-sm font-medium">Delete</button>
-                              </div>
-                            </td>
-                          </>
-                        )}
-                      </tr>
-                    ))}
-                    {tasks.length === 0 && (
-                      <tr>
-                        <td colSpan={4} className="p-4 text-center text-muted">No tasks found</td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </Card>
-          </div>
-          
+                        </>
+                      )}
+                    </tr>
+                  ))}
+                  {tasks.length === 0 && (
+                    <tr>
+                      <td colSpan={5} className="p-4 text-center text-muted">No tasks found</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </Card>
         </div>
+
+        {/* User Management Section */}
+        <div className="mb-10">
+          <h2 className="text-xl font-bold text-foreground mb-4">User Management</h2>
+          <Card className="overflow-hidden shadow-sm border border-gray-200">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="bg-gray-100/50 border-b border-gray-200 text-sm">
+                    <th className="p-3 font-medium text-muted">User Email</th>
+                    <th className="p-3 font-medium text-muted">Role</th>
+                    <th className="p-3 font-medium text-muted text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {users.map(u => (
+                    <tr key={u.id} className="border-b border-gray-100 last:border-0 hover:bg-gray-50/50 transition-colors">
+                      <td className="p-3 text-sm font-medium">{u.email}</td>
+                      <td className="p-3">
+                        <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${u.role === 'admin' ? 'bg-purple-100 text-purple-700' : 'bg-gray-100 text-gray-700'}`}>
+                          {u.role}
+                        </span>
+                      </td>
+                      <td className="p-3 text-right">
+                        <button 
+                          onClick={() => handleDeleteUser(u.id)}
+                          className="text-red-500 hover:text-red-700 text-sm font-medium"
+                          disabled={u.id === user.id}
+                        >
+                          Delete
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                  {users.length === 0 && (
+                    <tr>
+                      <td colSpan={3} className="p-4 text-center text-muted">No users found</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </Card>
+        </div>
+
+
       </div>
     </div>
   );

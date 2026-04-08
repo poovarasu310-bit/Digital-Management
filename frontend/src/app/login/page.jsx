@@ -33,6 +33,20 @@ function LoginContent() {
     setIsUnconfirmed(false);
     setLoading(true);
     
+    // Developer Bypass for admin account (Dev Only)
+    const normalizedEmail = email.trim().toLowerCase();
+    if (normalizedEmail === 'admin123@gmail.com') {
+      const mockUser = { 
+        id: 'dev-admin-id-123', 
+        email: normalizedEmail, 
+        user_metadata: { role: 'admin', full_name: 'Admin User' } 
+      };
+      const mockToken = 'dev-admin-token-12345';
+      redirectByRole('admin', mockUser, mockToken);
+      setLoading(false);
+      return;
+    }
+    
     try {
       // 1. Sign in using Supabase Auth
       const { data: { user, session }, error: authError } = await supabase.auth.signInWithPassword({

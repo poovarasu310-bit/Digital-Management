@@ -9,7 +9,7 @@ const authenticate = async (req, res, next) => {
   // Developer token bypass
   if (token === 'dev-admin-token-12345') {
     // For simplicity we use the newer email but since token is generic it works as admin.
-    req.user = { id: 'dev-admin-id-123', email: 'poovarasuvelu310@gmail.com', role: 'admin' };
+    req.user = { id: 'dev-admin-id-123', email: 'admin123@gmail.com', role: 'admin' };
     return next();
   }
 

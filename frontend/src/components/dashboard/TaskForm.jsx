@@ -6,6 +6,7 @@ export default function TaskForm({ onTaskAdded }) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [status, setStatus] = useState('pending');
+  const [githubLink, setGithubLink] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
@@ -13,10 +14,11 @@ export default function TaskForm({ onTaskAdded }) {
     if (!title.trim()) return;
 
     setLoading(true);
-    await onTaskAdded({ title, description, status });
+    await onTaskAdded({ title, description, status, githubLink });
     setTitle('');
     setDescription('');
     setStatus('pending');
+    setGithubLink('');
     setLoading(false);
   };
 
@@ -58,6 +60,17 @@ export default function TaskForm({ onTaskAdded }) {
             <option value="in-progress">In Progress</option>
             <option value="completed">Completed</option>
           </select>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-foreground mb-1">GitHub Link (Optional)</label>
+          <input 
+            type="url" 
+            value={githubLink}
+            onChange={(e) => setGithubLink(e.target.value)}
+            className="w-full px-4 py-2 border border-border rounded-md focus:ring-primary focus:border-primary outline-none"
+            placeholder="https://github.com/username/repo"
+          />
         </div>
 
         <Button type="submit" className="w-full" disabled={loading}>
